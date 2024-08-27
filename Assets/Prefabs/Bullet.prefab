@@ -147,6 +147,7 @@ MonoBehaviour:
   _initialSpeed: 2
   _speedMultiplier: 1.05
   _maxSpeed: 20
+  _movementDirection: 1
 --- !u!50 &8328432944465105833
 Rigidbody2D:
   serializedVersion: 4

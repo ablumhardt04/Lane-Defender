@@ -20,7 +20,7 @@ public class Bullet : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb2D.velocity = new Vector2(currentSpeed, 0);
+        rb2D.velocity = new Vector2(currentSpeed * _movementDirection, 0);
         if (currentSpeed < _maxSpeed)
         {
             currentSpeed *= _speedMultiplier;
