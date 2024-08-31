@@ -19,6 +19,7 @@ public class TankController : MonoBehaviour
     [SerializeField] private float _maxBulletCooldown;
     [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private Transform _bulletSpawn;
+    [SerializeField] private Transform _explosionSpawn;
 
     void Start()
     {
@@ -76,6 +77,11 @@ public class TankController : MonoBehaviour
             }
             yield return null;
         }
+    }
+
+    public Vector2 GetExplosionPos()
+    {
+        return _explosionSpawn.position;
     }
 
     private void OnDestroy()

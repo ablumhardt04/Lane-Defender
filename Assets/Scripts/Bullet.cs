@@ -11,11 +11,17 @@ public class Bullet : MonoBehaviour
     private float currentSpeed;
     private Rigidbody2D rb2D;
     [SerializeField] private int _movementDirection;
+    [SerializeField] private GameObject _explosionPrefab;
 
     void Start()
     {
         rb2D = GetComponent<Rigidbody2D>();
         currentSpeed = _initialSpeed;
+        if (tag == "Bullet")
+        {
+            Vector2 pos = GameObject.Find("Tank").GetComponent<TankController>().GetExplosionPos();
+            Instantiate(_explosionPrefab, pos, Quaternion.identity);
+        }
     }
 
     void FixedUpdate()
@@ -34,5 +40,15 @@ public class Bullet : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (tag == "Bullet")
+        {
+            Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
+            Destroy(gameObject);
+        }
+        
     }
 }

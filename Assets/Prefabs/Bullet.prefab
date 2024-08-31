@@ -148,6 +148,7 @@ MonoBehaviour:
   _speedMultiplier: 1.05
   _maxSpeed: 20
   _movementDirection: 1
+  _explosionPrefab: {fileID: 5358344781301095060, guid: a6a51ffa4ed5f054b919aace5ff5fdee, type: 3}
 --- !u!50 &8328432944465105833
 Rigidbody2D:
   serializedVersion: 4
