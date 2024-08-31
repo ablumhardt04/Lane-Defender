@@ -1,0 +1,34 @@
+{
+    "name": "Menu",
+    "maps": [
+        {
+            "name": "Menu",
+            "id": "0ad576fa-2db3-44b2-a8bf-480e0936f40c",
+            "actions": [
+                {
+                    "name": "Restart",
+                    "type": "Button",
+                    "id": "80b74d18-66f4-4908-aa1e-c7bc0915b740",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "dd72dc18-6dac-43ff-a060-a86da6f37455",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Restart",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

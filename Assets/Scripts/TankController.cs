@@ -11,6 +11,7 @@ public class TankController : MonoBehaviour
     private InputAction move;
     private InputAction fire;
     private bool moving;
+    private bool firing;
     [SerializeField] private int _moveSpeed;
     private Rigidbody2D rb2D;
 
@@ -29,15 +30,18 @@ public class TankController : MonoBehaviour
         move.canceled += Move_canceled;
         fire = playerInputInstance.currentActionMap.FindAction("Fire");
         fire.started += Fire_started;
+        fire.canceled += Fire_canceled;
+    }
+
+    private void Fire_canceled(InputAction.CallbackContext context)
+    {
+        firing = false;
     }
 
     private void Fire_started(InputAction.CallbackContext context)
     {
-        if (bulletCooldown < 0)
-        {
-            bulletCooldown = _maxBulletCooldown;
-            Instantiate(_bulletPrefab, _bulletSpawn.position, Quaternion.identity);
-        }
+        firing = true;
+        StartCoroutine(ContinuedFire());
     }
 
     private void Move_canceled(InputAction.CallbackContext context)
@@ -56,7 +60,29 @@ public class TankController : MonoBehaviour
         bulletCooldown -= Time.deltaTime;
         if (moving)
         {
-            rb2D.velocity = new Vector2(0, move.ReadValue<float>() * _moveSpeed * Time.deltaTime);
+            print(rb2D.velocity.y);
+            rb2D.velocity = new Vector2(0, move.ReadValue<float>() * _moveSpeed);
         }
+    }
+
+    private IEnumerator ContinuedFire()
+    {
+        while (firing)
+        {
+            if (bulletCooldown < 0)
+            {
+                bulletCooldown = _maxBulletCooldown;
+                Instantiate(_bulletPrefab, _bulletSpawn.position, Quaternion.identity);
+            }
+            yield return null;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        move.started -= Move_started;
+        move.canceled -= Move_canceled;
+        fire.started -= Fire_started;
+        fire.canceled += Fire_canceled;
     }
 }
