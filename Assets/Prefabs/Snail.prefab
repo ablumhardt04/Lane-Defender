@@ -95,8 +95,10 @@ GameObject:
   - component: {fileID: 8282952955284256515}
   - component: {fileID: 2504441335937064123}
   - component: {fileID: 6407613673412254686}
+  - component: {fileID: 6899407488101216344}
   - component: {fileID: 8305359936928721548}
   - component: {fileID: 6874496057559666468}
+  - component: {fileID: 614654247669613550}
   m_Layer: 0
   m_Name: Snail
   m_TagString: Untagged
@@ -188,6 +190,24 @@ MonoBehaviour:
   _speedMultiplier: 1
   _maxSpeed: 1
   _movementDirection: -1
+  _explosionPrefab: {fileID: 0}
+--- !u!114 &6899407488101216344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6170840193001804560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9ed2366734467347b20f7539fefbf65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _walk1: {fileID: 21300000, guid: c1ca10c8ab2686f4cacccce215dde26a, type: 3}
+  _walk2: {fileID: 21300000, guid: 965e293fca1947a48a13ebcc9a23d9f1, type: 3}
+  _hit: {fileID: 21300000, guid: b40c37bb46c16cf4aa2a0c5a40c63937, type: 3}
+  _dead: {fileID: 21300000, guid: 116de63c4ac98504d9accc2266af0baa, type: 3}
+  _spriteState: 0
 --- !u!50 &8305359936928721548
 Rigidbody2D:
   serializedVersion: 4
@@ -196,7 +216,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6170840193001804560}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -214,7 +234,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 6
 --- !u!70 &6874496057559666468
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -250,3 +270,24 @@ CapsuleCollider2D:
   m_Offset: {x: 0.019926174, y: -0.00000012158469}
   m_Size: {x: 0.5300519, y: 0.40591276}
   m_Direction: 1
+--- !u!95 &614654247669613550
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6170840193001804560}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0c25e18df0eee8645927aa8ca0744c83, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

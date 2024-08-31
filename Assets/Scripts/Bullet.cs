@@ -12,6 +12,8 @@ public class Bullet : MonoBehaviour
     private Rigidbody2D rb2D;
     [SerializeField] private int _movementDirection;
     [SerializeField] private GameObject _explosionPrefab;
+    private bool movePaused;
+    private float storedSpeed;
 
     void Start()
     {
@@ -26,19 +28,31 @@ public class Bullet : MonoBehaviour
 
     void FixedUpdate()
     {
-        rb2D.velocity = new Vector2(currentSpeed * _movementDirection, 0);
-        if (currentSpeed < _maxSpeed)
+        if (!movePaused)
         {
-            currentSpeed *= _speedMultiplier;
-            if (currentSpeed > _maxSpeed)
+            rb2D.velocity = new Vector2(currentSpeed * _movementDirection, 0);
+            if (currentSpeed < _maxSpeed)
             {
-                currentSpeed = _maxSpeed;
+                currentSpeed *= _speedMultiplier;
+                if (currentSpeed > _maxSpeed)
+                {
+                    currentSpeed = _maxSpeed;
+                }
             }
         }
-
+        
         if ((transform.position.x > 10) && (tag == "Bullet"))
         {
             Destroy(gameObject);
+        }
+    }
+
+    public void PauseMove(bool state)
+    {
+        movePaused = state;
+        if (state == true)
+        {
+            rb2D.velocity = Vector2.zero;
         }
     }
 
