@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Bullet
   - Tank
+  - ExpParent
   layers:
   - Default
   - TransparentFX

@@ -7,8 +7,11 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    private TankController tc;
     private PlayerInput playerInputInstance;
     private InputAction restart;
+
+    private int lives = 3;
 
     [SerializeField] private Transform _enemyParent;
     private float _enemyStartTime;
@@ -29,6 +32,7 @@ public class GameManager : MonoBehaviour
         restart = playerInputInstance.currentActionMap.FindAction("Restart");
         restart.started += Restart_started;
 
+        tc = GameObject.Find("Tank").GetComponent<TankController>();
         _enemyStartTime = Time.time;
         StartCoroutine(EnemySpawner());
     }
@@ -38,10 +42,13 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(0);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void GameOver()
     {
-        
+        for (int i = 0; i < _enemyParent.childCount; i++)
+        {
+            _enemyParent.GetChild(i).GetComponent<Bullet>().SetDirection(1);
+            _enemyParent.GetChild(i).GetComponent<SpriteRenderer>().flipX = true;
+        }
     }
 
     private IEnumerator EnemySpawner()
@@ -52,7 +59,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         SpawnEnemy(5, false);
 
-        while (true)
+        while (lives > 0)
         {
             yield return new WaitForSeconds(LengthBetweenSpawns());
             _enemyIntensity = (Time.time - _enemyStartTime) / 5;
@@ -73,7 +80,7 @@ public class GameManager : MonoBehaviour
         }
         if (_enemyIntensity >= 12) // 60 seconds have passed
         {
-            length = 0.5f;
+            length = 1f;
         }
         length += UnityEngine.Random.Range(0, 1f) - 0.5f;
         return Mathf.Max(0.01f, length);
@@ -92,7 +99,7 @@ public class GameManager : MonoBehaviour
             {
                 if (lane == lastLanesChosen[i])
                 {
-                    goodLane = true;
+                    goodLane = false;
                 }
             }
         }
@@ -102,18 +109,21 @@ public class GameManager : MonoBehaviour
         lastLanesChosen[0] = lane;
 
         // Spawns enemy
+        GameObject foe;
         if (health == 5)
         {
-            Instantiate(_snailPrefab, new Vector2(10, snailPositions[lane]), Quaternion.identity, _enemyParent);
+            foe = Instantiate(_snailPrefab, new Vector2(10, snailPositions[lane]), Quaternion.identity, _enemyParent);
         }
         else if (health == 3)
         {
-            Instantiate(_snakePrefab, new Vector2(10.25f, snakePositions[lane]), Quaternion.identity, _enemyParent);
+            foe = Instantiate(_snakePrefab, new Vector2(10.25f, snakePositions[lane]), Quaternion.identity, _enemyParent);
         }
         else
         {
-            Instantiate(_slimePrefab, new Vector2(9.75f, slimePositions[lane]), Quaternion.identity, _enemyParent);
+            foe = Instantiate(_slimePrefab, new Vector2(9.75f, slimePositions[lane]), Quaternion.identity, _enemyParent);
         }
+        foe.GetComponent<Bullet>().MaxSpeedUp(EnemySpeedUp(), true);
+        foe.GetComponent<Bullet>().SetDirection(lives < 1 ? 1 : -1); // ensures all foes move right after game over
 
         if ((couldDouble) && (health == 1))
         {
@@ -150,11 +160,51 @@ public class GameManager : MonoBehaviour
             int[] options = { 5, 3, 1 };
             return options[UnityEngine.Random.Range(0, options.Length)];
         }
-        if (_enemyIntensity <= 12) // > 60 seconds have passed
+        if (_enemyIntensity >= 12) // > 60 seconds have passed
         {
             return 3;
         }
         return 1;
+    }
+
+    private float EnemySpeedUp()
+    {
+        if (_enemyIntensity <= 4) // < 20 seconds have passed
+        {
+            return 0;
+        }
+        if (_enemyIntensity <= 8) // < 40 seconds have passed
+        {
+            return 0.5f;
+        }
+        if (_enemyIntensity <= 12) // < 60 seconds have passed
+        {
+            return 1f;
+        }
+        if (_enemyIntensity >= 12) // > 60 seconds have passed
+        {
+            return 1.25f;
+        }
+        return 0;
+    }
+
+    public int GetLives()
+    {
+        return lives;
+    }
+
+    public void LoseLife()
+    {
+        lives--;
+        if (lives == 0)
+        {
+            GameOver();
+        }
+    }
+
+    public TankController GetTankController()
+    {
+        return tc;
     }
 
     private void OnDestroy()

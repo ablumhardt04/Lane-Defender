@@ -18,7 +18,10 @@ public class Bullet : MonoBehaviour
     void Start()
     {
         rb2D = GetComponent<Rigidbody2D>();
-        currentSpeed = _initialSpeed;
+        if (currentSpeed == 0)
+        {
+            currentSpeed = _initialSpeed;
+        }
         if (tag == "Bullet")
         {
             Vector2 pos = GameObject.Find("Tank").GetComponent<TankController>().GetExplosionPos();
@@ -56,6 +59,20 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    public void MaxSpeedUp(float amount, bool setImmediately)
+    {
+        _maxSpeed += amount;
+        if (setImmediately)
+        {
+            currentSpeed = amount; 
+        }
+    }
+
+    public void SetDirection(int d)
+    {
+        _movementDirection = d;
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (tag == "Bullet")
@@ -63,6 +80,5 @@ public class Bullet : MonoBehaviour
             Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
             Destroy(gameObject);
         }
-        
     }
 }

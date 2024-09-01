@@ -18,6 +18,13 @@ public class Explosion : MonoBehaviour
 
     private void Destroy()
     {
-        Destroy(gameObject);
+        if ((transform.parent != null) && (transform.parent.tag == "ExpParent"))
+        {
+            Destroy(transform.parent.gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 }

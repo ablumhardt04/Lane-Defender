@@ -13,6 +13,7 @@ public class Foe : MonoBehaviour
     [SerializeField] private Sprite _hit;
     [SerializeField] private Sprite _dead;
     [SerializeField] private int _spriteState;
+    [SerializeField] private GameObject _bigExplosionPrefab;
     private bool hit;
     private bool dead;
     private Color initialColor;
@@ -110,6 +111,27 @@ public class Foe : MonoBehaviour
             {
                 animator.SetBool("dead", true);
             }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Tank") // refers to tank and left wall
+        {
+            TankController tc = collision.gameObject.GetComponent<TankController>();
+            if (tc == null)
+            {
+                tc = GameObject.Find("GameManager").GetComponent<GameManager>().GetTankController();
+                // went through gm in case Tank is already disabled and can't be found
+            }
+            tc.LoseLife();
+            if (tc.GetLives() < 1)
+            {
+                Instantiate(_bigExplosionPrefab, tc.transform.position, Quaternion.identity);
+                tc.gameObject.SetActive(false);
+            }
+            Instantiate(_bigExplosionPrefab, transform.position, Quaternion.identity);
+            Destroy(gameObject);
         }
     }
 }

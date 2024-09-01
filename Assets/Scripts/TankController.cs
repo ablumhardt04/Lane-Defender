@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 
 public class TankController : MonoBehaviour
 {
+    private GameManager gm;
     private PlayerInput playerInputInstance;
     private InputAction move;
     private InputAction fire;
@@ -23,6 +24,7 @@ public class TankController : MonoBehaviour
 
     void Start()
     {
+        gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         rb2D = GetComponent<Rigidbody2D>();
         playerInputInstance = GetComponent<PlayerInput>();
         playerInputInstance.currentActionMap.Enable();
@@ -82,6 +84,16 @@ public class TankController : MonoBehaviour
     public Vector2 GetExplosionPos()
     {
         return _explosionSpawn.position;
+    }
+
+    public int GetLives()
+    {
+        return gm.GetLives();
+    }
+
+    public void LoseLife()
+    {
+        gm.LoseLife();
     }
 
     private void OnDestroy()
