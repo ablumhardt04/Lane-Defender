@@ -203,6 +203,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9ed2366734467347b20f7539fefbf65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _health: 2
   _walk1: {fileID: 21300000, guid: c1ca10c8ab2686f4cacccce215dde26a, type: 3}
   _walk2: {fileID: 21300000, guid: 965e293fca1947a48a13ebcc9a23d9f1, type: 3}
   _hit: {fileID: 21300000, guid: b40c37bb46c16cf4aa2a0c5a40c63937, type: 3}
