@@ -10,11 +10,16 @@ public class GameManager : MonoBehaviour
     private PlayerInput playerInputInstance;
     private InputAction restart;
 
+    [SerializeField] private Transform _enemyParent;
     private float _enemyStartTime;
     [SerializeField] private float _enemyIntensity;
     [SerializeField] private GameObject _snailPrefab;
+    [SerializeField] private GameObject _snakePrefab;
+    [SerializeField] private GameObject _slimePrefab;
     private int[] lastLanesChosen = { -1, -1, -1 };
-    private float[] _snailPositions = { 4f, 2.1f, 0.15f, -1.8f, -3.75f };
+    private float[] snailPositions = { 4f, 2.1f, 0.15f, -1.8f, -3.75f };
+    private float[] snakePositions = { 3.95f, 1.95f, 0.1f, -1.85f, -3.8f };
+    private float[] slimePositions = { 4f, 2.05f, 0.1f, -1.85f, -3.8f };
 
     // Start is called before the first frame update
     void Start()
@@ -43,15 +48,15 @@ public class GameManager : MonoBehaviour
     {
         // initial wave
         _enemyIntensity = 0;
-        SpawnEnemy(1);
+        SpawnEnemy(1, false);
         yield return new WaitForSeconds(0.5f);
-        SpawnEnemy(5);
+        SpawnEnemy(5, false);
 
         while (true)
         {
             yield return new WaitForSeconds(LengthBetweenSpawns());
-            _enemyIntensity = (Time.time - _enemyStartTime) % 5;
-            SpawnEnemy(SelectRandomEnemy());
+            _enemyIntensity = (Time.time - _enemyStartTime) / 5;
+            SpawnEnemy(SelectRandomEnemy(), true);
         }
     }
 
@@ -74,7 +79,7 @@ public class GameManager : MonoBehaviour
         return Mathf.Max(0.01f, length);
     }
 
-    private void SpawnEnemy(int health)
+    private void SpawnEnemy(int health, bool couldDouble)
     {
         // Chooses a random lane different from the last three lanes chosen
         int lane;
@@ -99,34 +104,55 @@ public class GameManager : MonoBehaviour
         // Spawns enemy
         if (health == 5)
         {
-            Instantiate(_snailPrefab, new Vector2(10, _snailPositions[lane]), Quaternion.identity, transform);
+            Instantiate(_snailPrefab, new Vector2(10, snailPositions[lane]), Quaternion.identity, _enemyParent);
         }
         else if (health == 3)
         {
-
+            Instantiate(_snakePrefab, new Vector2(10.25f, snakePositions[lane]), Quaternion.identity, _enemyParent);
         }
         else
         {
+            Instantiate(_slimePrefab, new Vector2(9.75f, slimePositions[lane]), Quaternion.identity, _enemyParent);
+        }
 
+        if ((couldDouble) && (health == 1))
+        {
+            if ((_enemyIntensity <= 4) && (UnityEngine.Random.Range(0, 10) == 0)) // < 20 seconds have passed
+            {
+                SpawnEnemy(1, false); // 10% chance to spawn second slime in other lane
+            }
+            else if ((_enemyIntensity <= 8) && (UnityEngine.Random.Range(0, 5) == 0)) // < 40 seconds have passed
+            {
+                SpawnEnemy(1, false); // 20% chance to spawn second slime in other lane
+            }
+            else if (UnityEngine.Random.Range(0, 2) == 0) // > 40 seconds have passed
+            {
+                SpawnEnemy(1, false); // 50% chance to spawn second slime in other lane
+            }
         }
     }
 
     private int SelectRandomEnemy()
     {
         // Chooses enemy's health at random, which determines which enemy it will be
-        if (_enemyIntensity <= 4) // 20 seconds have passed
+        if (_enemyIntensity <= 4) // < 20 seconds have passed
         {
             int[] options = { 5, 3, 3, 1, 1, 1 };
             return options[UnityEngine.Random.Range(0, options.Length)];
         }
-        if (_enemyIntensity <= 8) // 40 seconds have passed
+        if (_enemyIntensity <= 8) // < 40 seconds have passed
+        {
+            int[] options = { 5, 3, 1, 1 };
+            return options[UnityEngine.Random.Range(0, options.Length)];
+        }
+        if (_enemyIntensity <= 12) // < 60 seconds have passed
         {
             int[] options = { 5, 3, 1 };
             return options[UnityEngine.Random.Range(0, options.Length)];
         }
-        if (_enemyIntensity <= 12) // 60 seconds have passed
+        if (_enemyIntensity <= 12) // > 60 seconds have passed
         {
-            return 5;
+            return 3;
         }
         return 1;
     }
