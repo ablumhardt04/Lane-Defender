@@ -80,6 +80,10 @@ PrefabInstance:
       propertyPath: m_Size.y
       value: 0.25
       objectReference: {fileID: 0}
+    - target: {fileID: 7204308506466225105, guid: cd38480617238024e87ab50cab6ecfeb, type: 3}
+      propertyPath: m_SortingOrder
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 8045890105294429336, guid: cd38480617238024e87ab50cab6ecfeb, type: 3}
       propertyPath: m_Name
       value: BigBullet Variant

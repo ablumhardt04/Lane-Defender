@@ -25,6 +25,7 @@ public class TankController : MonoBehaviour
     [SerializeField] private GameObject _bigBulletPrefab;
 
     private bool midSuper;
+    private bool superReady;
 
     void Start()
     {
@@ -44,7 +45,10 @@ public class TankController : MonoBehaviour
 
     private void Super_started(InputAction.CallbackContext context)
     {
-        SetSuper(true);
+        if (superReady)
+        {
+            SetSuper(true);
+        }
     }
 
     private void Fire_canceled(InputAction.CallbackContext context)
@@ -102,14 +106,9 @@ public class TankController : MonoBehaviour
         return _explosionSpawn.position;
     }
 
-    public int GetLives()
+    public void SuperIsReady()
     {
-        return gm.GetLives();
-    }
-
-    public void LoseLife()
-    {
-        gm.LoseLife();
+        superReady = true;
     }
 
     public void SetSuper(bool set)
@@ -117,6 +116,7 @@ public class TankController : MonoBehaviour
         if (set)
         {
             midSuper = true;
+            superReady = false;
             moving = false;
             rb2D.velocity = Vector2.zero;
             firing = false;
@@ -131,7 +131,7 @@ public class TankController : MonoBehaviour
 
     public void FireBigBullet()
     {
-        Instantiate(_bigBulletPrefab, new Vector2(-6.5f, 0), Quaternion.identity);
+        Instantiate(_bigBulletPrefab, new Vector2(-11.5f, 0), Quaternion.identity);
     }
 
     private void OnDestroy()

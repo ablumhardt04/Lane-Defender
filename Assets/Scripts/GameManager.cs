@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -14,7 +15,9 @@ public class GameManager : MonoBehaviour
     private InputAction restart;
 
     private int lives = 3;
+    [SerializeField] private TMP_Text _livesText;
     [SerializeField] private RectTransform _powerBar;
+    [SerializeField] private GameObject _pressEnterText;
     [SerializeField] private Transform _powerBarPosition;
     private Slider powerSlider;
     private bool midSuper;
@@ -45,6 +48,8 @@ public class GameManager : MonoBehaviour
         powerSlider = _powerBar.GetComponent<Slider>();
         _enemyStartTime = Time.time;
         StartCoroutine(EnemySpawner());
+
+        
     }
 
     private void Restart_started(InputAction.CallbackContext context)
@@ -54,12 +59,24 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        print(Time.time);
         _powerBar.anchoredPosition = Camera.main.WorldToScreenPoint(_powerBarPosition.position);
+    }
+
+    private IEnumerator EnterTextFlash()
+    {
+        while (powerSlider.value == 1)
+        {
+            _pressEnterText.SetActive(true);
+            yield return new WaitForSeconds(0.5f);
+            _pressEnterText.SetActive(false);
+            yield return new WaitForSeconds(0.5f);
+        }
     }
 
     private void GameOver()
     {
+        _livesText.gameObject.SetActive(false);
+        _powerBar.gameObject.SetActive(false);
         for (int i = 0; i < _enemyParent.childCount; i++)
         {
             _enemyParent.GetChild(i).GetComponent<Bullet>().SetDirection(1);
@@ -90,7 +107,7 @@ public class GameManager : MonoBehaviour
 
             // The enemy intensity value is (seconds since start*) / 5
             // *excluding time the super attack is taking place in
-            _enemyIntensity = (Time.time - _enemyStartTime - (superTotal * 4)) / 5;
+            _enemyIntensity = (Time.time - _enemyStartTime - (superTotal * 5)) / 5;
             SpawnEnemy(SelectRandomEnemy(), true);
         }
     }
@@ -218,6 +235,7 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator Super()
     {
+        powerSlider.value = 0;
         float t = 0;
         Vector2 startPos = tc.transform.position;
         Vector2 endPos = new Vector2(-15, 0);
@@ -229,17 +247,17 @@ public class GameManager : MonoBehaviour
         while (true)
         {
             // One second: moving tank and camera into a cinematic position, slowing down enemies
-            if (t <= 1)
+            if (t <= 2)
             {
                 tc.transform.position = Vector2.Lerp(startPos, endPos, t);
                 Camera.main.transform.position = Vector2.Lerp(Vector2.zero, endPos, t);
-                Camera.main.orthographicSize = Mathf.Lerp(5, 1.75f, t);
+                Camera.main.orthographicSize = Mathf.Lerp(5, 1, t / 2);
                 for (int i = 0; i < _enemyParent.childCount; i++)
                 {
                     _enemyParent.GetChild(i).GetComponent<Bullet>().PercentageSlowDown(1 - t);
                 }
             }
-            // One second: oank tilts back and starts to vibrate and turns red
+            // One second: tank tilts back and starts to vibrate and turns red
             if ((t > 1) && (t <= 2))
             {
                 tc.transform.eulerAngles = new Vector3(0, 0, Mathf.Lerp(0, 5, t - 1));
@@ -257,22 +275,24 @@ public class GameManager : MonoBehaviour
                     bulletFired = true;
                     tc.FireBigBullet();
                     tc.transform.eulerAngles = new Vector3(0, 0, 10);
+                    tc.transform.position = new Vector2(-20, 0);
+                    Camera.main.transform.position = tc.transform.position;
                 }
-                Camera.main.transform.position = new Vector2(Mathf.Lerp(-15, 0, (t - 2) * 2), 0);
+                Camera.main.transform.position = new Vector2(Mathf.Lerp(-20, 0, (t - 2) * 2), 0);
                 Camera.main.orthographicSize = Mathf.Lerp(1.75f, 5, (t - 2) * 2);
             }
-            // Half second, starts in middle of previous second: moves tank back into play
-            if (t > 2.5f)
+            // Half second: moves tank back into play
+            if (t > 3.5f)
             {
                 tc.GetComponent<SpriteRenderer>().color = Color.white;
-                tc.transform.position = Vector2.Lerp(new Vector2(-10.5f, 0), new Vector2(-7.65f, 0), (t - 2.5f) * 2);
+                tc.transform.position = Vector2.Lerp(new Vector2(-10.5f, 0), new Vector2(-7.65f, 0), (t - 3.5f) * 2);
                 tc.transform.eulerAngles = Vector3.zero;
             }
             // Fixes camera before next frame / before coroutine exits
             Camera.main.transform.position = new Vector3(Camera.main.transform.position.x,
                 Camera.main.transform.position.y, -10);
             // Resets things before coroutine ends
-            if (t > 3)
+            if (t > 4)
             {
                 _leftWall.isTrigger = true;
                 tc.GetComponent<Collider2D>().enabled = true;
@@ -281,6 +301,7 @@ public class GameManager : MonoBehaviour
                 superTotal++;
                 powerSlider.value = 0;
                 canvas.SetActive(true);
+                _pressEnterText.SetActive(false);
                 yield break;
             }
             t += Time.deltaTime;
@@ -300,6 +321,35 @@ public class GameManager : MonoBehaviour
         {
             GameOver();
         }
+        else
+        {
+            _livesText.text = "LIVES: " + lives;
+            IncreasePowerSlider(0.25f);
+        }
+    }
+
+    public void IncreasePowerSlider(float amount)
+    {
+        if (powerSlider.value == 1) { return; }
+        powerSlider.value = Mathf.Min(1, powerSlider.value + amount);
+        if (powerSlider.value == 1)
+        {
+            tc.SuperIsReady();
+            StartCoroutine(EnterTextFlash());
+        }
+    }
+
+    public void FoeDied(int foeType, float foeX, bool killedByBigBullet)
+    {
+        // Allocates power meter for the kill
+        if ((powerSlider.value != 1) && (!killedByBigBullet))
+        {
+            float superEnergy = foeType * 0.02f; // defaults to 2, 5, or 10% of the bar
+            superEnergy *= 1 + Mathf.Max(0, foeX) / 18; // up to 1.5x multiplier if it's killed quickly
+            superEnergy *= 1 + Mathf.Min(1, _enemyIntensity / 12) / 2; // up to 1.5x time multiplier
+            IncreasePowerSlider(superEnergy);
+        }
+        
     }
 
     public TankController GetTankController()

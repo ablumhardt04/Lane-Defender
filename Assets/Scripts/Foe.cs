@@ -4,10 +4,12 @@ using UnityEngine;
 
 public class Foe : MonoBehaviour
 {
+    private GameManager gm;
     private SpriteRenderer sr;
     private Animator animator;
     private Bullet moveScript;
     [SerializeField] private int _health;
+    private int initialHealth;
     [SerializeField] private Sprite _walk1;
     [SerializeField] private Sprite _walk2;
     [SerializeField] private Sprite _hit;
@@ -16,15 +18,18 @@ public class Foe : MonoBehaviour
     [SerializeField] private GameObject _bigExplosionPrefab;
     private bool hit;
     private bool dead;
+    private bool killedByBigBullet;
     private Color initialColor;
 
     // Start is called before the first frame update
     void Start()
     {
+        gm = GameObject.Find("GameManager").GetComponent<GameManager>();
         sr = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
         moveScript = GetComponent<Bullet>();
         initialColor = sr.color;
+        initialHealth = _health;
     }
 
     public void ChangeSprite(int state)
@@ -80,9 +85,11 @@ public class Foe : MonoBehaviour
 
     /// <summary>
     /// Sets a variety of effects to indicate death
+    /// Only applies to being shot, not death by collision with tank
     /// </summary>
     private void Death()
     {
+        gm.FoeDied(initialHealth, transform.position.x, killedByBigBullet);
         moveScript.enabled = false;
         Rigidbody2D rb2D = GetComponent<Rigidbody2D>();
         rb2D.bodyType = RigidbodyType2D.Dynamic;
@@ -92,6 +99,7 @@ public class Foe : MonoBehaviour
         rb2D.velocity = new Vector2(20, 10);
         rb2D.angularVelocity = 360;
         GetComponent<Collider2D>().enabled = false;
+        sr.sortingOrder = 20;
         if ((transform.childCount > 0) && (transform.GetChild(0).name == "Shadow"))
         {
             transform.GetChild(0).gameObject.SetActive(false);
@@ -104,6 +112,7 @@ public class Foe : MonoBehaviour
         {
             if (collision.gameObject.GetComponent<Bullet>().IsBig())
             {
+                killedByBigBullet = true;
                 _health = 0;
             }
             if (_health > 1)
@@ -122,14 +131,9 @@ public class Foe : MonoBehaviour
     {
         if (collision.gameObject.tag == "Tank") // refers to tank and left wall
         {
-            TankController tc = collision.gameObject.GetComponent<TankController>();
-            if (tc == null)
-            {
-                tc = GameObject.Find("GameManager").GetComponent<GameManager>().GetTankController();
-                // went through gm in case Tank is already disabled and can't be found
-            }
-            tc.LoseLife();
-            if (tc.GetLives() < 1)
+            TankController tc = gm.GetTankController();
+            gm.LoseLife();
+            if (gm.GetLives() < 1)
             {
                 Instantiate(_bigExplosionPrefab, tc.transform.position, Quaternion.identity);
                 tc.gameObject.SetActive(false);
