@@ -35,6 +35,13 @@ public class GameManager : MonoBehaviour
     private float[] slimePositions = { 4f, 2.05f, 0.1f, -1.85f, -3.8f };
     [SerializeField] private Collider2D _leftWall;
 
+    [SerializeField] private GameObject _gameEndParent;
+    [SerializeField] private TMP_Text _endText;
+    [SerializeField] private TMP_Text _endScoreText;
+    [SerializeField] private GameObject _endGroup2;
+    [SerializeField] private TMP_Text _endHighScoreText;
+    [SerializeField] private GameObject _newHighScore;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -48,8 +55,6 @@ public class GameManager : MonoBehaviour
         powerSlider = _powerBar.GetComponent<Slider>();
         _enemyStartTime = Time.time;
         StartCoroutine(EnemySpawner());
-
-        
     }
 
     private void Restart_started(InputAction.CallbackContext context)
@@ -73,7 +78,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void GameOver()
+    private IEnumerator GameOver()
     {
         _livesText.gameObject.SetActive(false);
         _powerBar.gameObject.SetActive(false);
@@ -82,6 +87,7 @@ public class GameManager : MonoBehaviour
             _enemyParent.GetChild(i).GetComponent<Bullet>().SetDirection(1);
             _enemyParent.GetChild(i).GetComponent<SpriteRenderer>().flipX = true;
         }
+        yield break;
     }
 
     private IEnumerator EnemySpawner()
@@ -124,6 +130,10 @@ public class GameManager : MonoBehaviour
             length = 2f;
         }
         if (_enemyIntensity >= 12) // 60 seconds have passed
+        {
+            length = 1.5f;
+        }
+        if (_enemyIntensity >= 18) // 90 seconds have passed
         {
             length = 1f;
         }
@@ -205,7 +215,12 @@ public class GameManager : MonoBehaviour
             int[] options = { 5, 3, 1 };
             return options[UnityEngine.Random.Range(0, options.Length)];
         }
-        if (_enemyIntensity >= 12) // > 60 seconds have passed
+        if (_enemyIntensity <= 18) // < 60 seconds have passed
+        {
+            int[] options = { 5, 3, 3, 3, 1 };
+            return options[UnityEngine.Random.Range(0, options.Length)];
+        }
+        if (_enemyIntensity >= 18) // > 90 seconds have passed
         {
             return 3;
         }
@@ -319,7 +334,7 @@ public class GameManager : MonoBehaviour
         lives--;
         if (lives == 0)
         {
-            GameOver();
+            StartCoroutine(GameOver());
         }
         else
         {
