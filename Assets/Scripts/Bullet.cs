@@ -16,6 +16,7 @@ public class Bullet : MonoBehaviour
     private bool movePaused;
     private float storedSpeed;
     [SerializeField] private bool big;
+    private float percentSpeed = 1;
 
     void Start()
     {
@@ -42,7 +43,7 @@ public class Bullet : MonoBehaviour
     {
         if (!movePaused)
         {
-            rb2D.velocity = new Vector2(currentSpeed * _movementDirection, 0);
+            rb2D.velocity = new Vector2(currentSpeed * _movementDirection * percentSpeed, 0);
             if (currentSpeed < _maxSpeed)
             {
                 currentSpeed *= _speedMultiplier;
@@ -53,6 +54,10 @@ public class Bullet : MonoBehaviour
             }
         }
         
+        if (big && (transform.position.x > 17))
+        {
+            Destroy(gameObject);
+        }
         if ((transform.position.x > 30) && (tag == "Bullet"))
         {
             Destroy(gameObject);
@@ -75,6 +80,11 @@ public class Bullet : MonoBehaviour
         {
             currentSpeed = amount; 
         }
+    }
+
+    public void PercentageSlowDown(float slow)
+    {
+        percentSpeed = Mathf.Max(0, slow);
     }
 
     public void SetDirection(int d)

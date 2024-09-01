@@ -9,6 +9,7 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     private TankController tc;
+    private GameObject canvas;
     private PlayerInput playerInputInstance;
     private InputAction restart;
 
@@ -16,6 +17,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private RectTransform _powerBar;
     [SerializeField] private Transform _powerBarPosition;
     private Slider powerSlider;
+    private bool midSuper;
+    private int superTotal;
 
     [SerializeField] private Transform _enemyParent;
     private float _enemyStartTime;
@@ -27,10 +30,12 @@ public class GameManager : MonoBehaviour
     private float[] snailPositions = { 4f, 2.1f, 0.15f, -1.8f, -3.75f };
     private float[] snakePositions = { 3.95f, 1.95f, 0.1f, -1.85f, -3.8f };
     private float[] slimePositions = { 4f, 2.05f, 0.1f, -1.85f, -3.8f };
+    [SerializeField] private Collider2D _leftWall;
 
     // Start is called before the first frame update
     void Start()
     {
+        canvas = GameObject.Find("Canvas");
         playerInputInstance = GetComponent<PlayerInput>();
         playerInputInstance.currentActionMap.Enable();
         restart = playerInputInstance.currentActionMap.FindAction("Restart");
@@ -49,6 +54,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        print(Time.time);
         _powerBar.anchoredPosition = Camera.main.WorldToScreenPoint(_powerBarPosition.position);
     }
 
@@ -72,7 +78,19 @@ public class GameManager : MonoBehaviour
         while (lives > 0)
         {
             yield return new WaitForSeconds(LengthBetweenSpawns());
-            _enemyIntensity = (Time.time - _enemyStartTime) / 5;
+            if (midSuper)
+            {
+                // Waits until end of super move, then another second
+                while (midSuper)
+                {
+                    yield return null;
+                }
+                yield return new WaitForSeconds(1);
+            }
+
+            // The enemy intensity value is (seconds since start*) / 5
+            // *excluding time the super attack is taking place in
+            _enemyIntensity = (Time.time - _enemyStartTime - (superTotal * 4)) / 5;
             SpawnEnemy(SelectRandomEnemy(), true);
         }
     }
@@ -196,6 +214,78 @@ public class GameManager : MonoBehaviour
             return 1.25f;
         }
         return 0;
+    }
+
+    public IEnumerator Super()
+    {
+        float t = 0;
+        Vector2 startPos = tc.transform.position;
+        Vector2 endPos = new Vector2(-15, 0);
+        bool bulletFired = false;
+        midSuper = true;
+        tc.GetComponent<Collider2D>().enabled = false;
+        _leftWall.isTrigger = false;
+        canvas.SetActive(false);
+        while (true)
+        {
+            // One second: moving tank and camera into a cinematic position, slowing down enemies
+            if (t <= 1)
+            {
+                tc.transform.position = Vector2.Lerp(startPos, endPos, t);
+                Camera.main.transform.position = Vector2.Lerp(Vector2.zero, endPos, t);
+                Camera.main.orthographicSize = Mathf.Lerp(5, 1.75f, t);
+                for (int i = 0; i < _enemyParent.childCount; i++)
+                {
+                    _enemyParent.GetChild(i).GetComponent<Bullet>().PercentageSlowDown(1 - t);
+                }
+            }
+            // One second: oank tilts back and starts to vibrate and turns red
+            if ((t > 1) && (t <= 2))
+            {
+                tc.transform.eulerAngles = new Vector3(0, 0, Mathf.Lerp(0, 5, t - 1));
+                float vibrateValue = (t - 1) / 10;
+                tc.transform.position = endPos + new Vector2(UnityEngine.Random.Range(-vibrateValue, vibrateValue),
+                    UnityEngine.Random.Range(-vibrateValue, vibrateValue));
+                tc.GetComponent<SpriteRenderer>().color = new Color(1, Mathf.Lerp(1, 2f / 5, t - 1), 
+                    Mathf.Lerp(1, 2f / 5, t - 1), 1);
+            }
+            // One second: bullet fires, camera moves back to normal
+            if (t > 2)
+            {
+                if (!bulletFired)
+                {
+                    bulletFired = true;
+                    tc.FireBigBullet();
+                    tc.transform.eulerAngles = new Vector3(0, 0, 10);
+                }
+                Camera.main.transform.position = new Vector2(Mathf.Lerp(-15, 0, (t - 2) * 2), 0);
+                Camera.main.orthographicSize = Mathf.Lerp(1.75f, 5, (t - 2) * 2);
+            }
+            // Half second, starts in middle of previous second: moves tank back into play
+            if (t > 2.5f)
+            {
+                tc.GetComponent<SpriteRenderer>().color = Color.white;
+                tc.transform.position = Vector2.Lerp(new Vector2(-10.5f, 0), new Vector2(-7.65f, 0), (t - 2.5f) * 2);
+                tc.transform.eulerAngles = Vector3.zero;
+            }
+            // Fixes camera before next frame / before coroutine exits
+            Camera.main.transform.position = new Vector3(Camera.main.transform.position.x,
+                Camera.main.transform.position.y, -10);
+            // Resets things before coroutine ends
+            if (t > 3)
+            {
+                _leftWall.isTrigger = true;
+                tc.GetComponent<Collider2D>().enabled = true;
+                midSuper = false;
+                tc.SetSuper(false);
+                superTotal++;
+                powerSlider.value = 0;
+                canvas.SetActive(true);
+                yield break;
+            }
+            t += Time.deltaTime;
+            yield return null;
+        }
     }
 
     public int GetLives()
