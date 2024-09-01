@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -12,6 +13,9 @@ public class GameManager : MonoBehaviour
     private InputAction restart;
 
     private int lives = 3;
+    [SerializeField] private RectTransform _powerBar;
+    [SerializeField] private Transform _powerBarPosition;
+    private Slider powerSlider;
 
     [SerializeField] private Transform _enemyParent;
     private float _enemyStartTime;
@@ -33,6 +37,7 @@ public class GameManager : MonoBehaviour
         restart.started += Restart_started;
 
         tc = GameObject.Find("Tank").GetComponent<TankController>();
+        powerSlider = _powerBar.GetComponent<Slider>();
         _enemyStartTime = Time.time;
         StartCoroutine(EnemySpawner());
     }
@@ -40,6 +45,11 @@ public class GameManager : MonoBehaviour
     private void Restart_started(InputAction.CallbackContext context)
     {
         SceneManager.LoadScene(0);
+    }
+
+    private void Update()
+    {
+        _powerBar.anchoredPosition = Camera.main.WorldToScreenPoint(_powerBarPosition.position);
     }
 
     private void GameOver()

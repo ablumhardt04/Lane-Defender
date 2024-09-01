@@ -11,6 +11,7 @@ public class TankController : MonoBehaviour
     private PlayerInput playerInputInstance;
     private InputAction move;
     private InputAction fire;
+    private InputAction super;
     private bool moving;
     private bool firing;
     [SerializeField] private int _moveSpeed;
@@ -21,6 +22,7 @@ public class TankController : MonoBehaviour
     [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private Transform _bulletSpawn;
     [SerializeField] private Transform _explosionSpawn;
+    [SerializeField] private GameObject _bigBulletPrefab;
 
     void Start()
     {
@@ -34,6 +36,14 @@ public class TankController : MonoBehaviour
         fire = playerInputInstance.currentActionMap.FindAction("Fire");
         fire.started += Fire_started;
         fire.canceled += Fire_canceled;
+        super = playerInputInstance.currentActionMap.FindAction("Super");
+        super.started += Super_started;
+    }
+
+    private void Super_started(InputAction.CallbackContext context)
+    {
+        Instantiate(_bigBulletPrefab);
+        Time.timeScale = 0.1f;
     }
 
     private void Fire_canceled(InputAction.CallbackContext context)
@@ -101,6 +111,7 @@ public class TankController : MonoBehaviour
         move.started -= Move_started;
         move.canceled -= Move_canceled;
         fire.started -= Fire_started;
-        fire.canceled += Fire_canceled;
+        fire.canceled -= Fire_canceled;
+        super.started -= Super_started;
     }
 }

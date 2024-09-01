@@ -102,6 +102,10 @@ public class Foe : MonoBehaviour
     {
         if (collision.gameObject.tag == "Bullet")
         {
+            if (collision.gameObject.GetComponent<Bullet>().IsBig())
+            {
+                _health = 0;
+            }
             if (_health > 1)
             {
                 animator.SetTrigger("hit");

@@ -12,8 +12,10 @@ public class Bullet : MonoBehaviour
     private Rigidbody2D rb2D;
     [SerializeField] private int _movementDirection;
     [SerializeField] private GameObject _explosionPrefab;
+    [SerializeField] private GameObject _bigExplosionPrefab;
     private bool movePaused;
     private float storedSpeed;
+    [SerializeField] private bool big;
 
     void Start()
     {
@@ -25,7 +27,14 @@ public class Bullet : MonoBehaviour
         if (tag == "Bullet")
         {
             Vector2 pos = GameObject.Find("Tank").GetComponent<TankController>().GetExplosionPos();
-            Instantiate(_explosionPrefab, pos, Quaternion.identity);
+            if (!big)
+            {
+                Instantiate(_explosionPrefab, pos, Quaternion.identity);
+            }
+            else
+            {
+                Instantiate(_bigExplosionPrefab, pos, Quaternion.identity);
+            }
         }
     }
 
@@ -44,7 +53,7 @@ public class Bullet : MonoBehaviour
             }
         }
         
-        if ((transform.position.x > 10) && (tag == "Bullet"))
+        if ((transform.position.x > 30) && (tag == "Bullet"))
         {
             Destroy(gameObject);
         }
@@ -73,12 +82,24 @@ public class Bullet : MonoBehaviour
         _movementDirection = d;
     }
 
+    public bool IsBig()
+    {
+        return big;
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (tag == "Bullet")
         {
-            Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
-            Destroy(gameObject);
+            if (!big)
+            {
+                Instantiate(_explosionPrefab, transform.position, Quaternion.identity);
+                Destroy(gameObject);
+            }
+            else
+            {
+                Instantiate(_explosionPrefab, collision.transform.position, Quaternion.identity);
+            }
         }
     }
 }

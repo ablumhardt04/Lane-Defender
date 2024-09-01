@@ -149,6 +149,8 @@ MonoBehaviour:
   _maxSpeed: 20
   _movementDirection: 1
   _explosionPrefab: {fileID: 5358344781301095060, guid: a6a51ffa4ed5f054b919aace5ff5fdee, type: 3}
+  _bigExplosionPrefab: {fileID: 799238148191709239, guid: 29c2d246bd1cea940b5b9fd4707a63be, type: 3}
+  big: 0
 --- !u!50 &8328432944465105833
 Rigidbody2D:
   serializedVersion: 4
