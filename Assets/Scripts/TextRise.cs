@@ -29,12 +29,12 @@ public class TextRise : MonoBehaviour
         float t = 0;
         while (t < 1)
         {
+            t += Time.deltaTime / riseSeconds;
             rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, Mathf.Lerp(initialY, initialY + riseDistance, t));
             if (fade && (t > 0.5f))
             {
                 text.color = initialColor - new Color(0, 0, 0, Mathf.Lerp(0, 1, (t - 0.5f) * 2));
             }
-            t += Time.deltaTime / riseSeconds;
             yield return null;
         }
         if (destroy)

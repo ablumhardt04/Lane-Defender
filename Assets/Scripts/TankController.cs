@@ -23,6 +23,8 @@ public class TankController : MonoBehaviour
     [SerializeField] private Transform _bulletSpawn;
     [SerializeField] private Transform _explosionSpawn;
     [SerializeField] private GameObject _bigBulletPrefab;
+    [SerializeField] private AudioClip _shootSound;
+    
 
     private bool midSuper;
     private bool superReady;
@@ -96,6 +98,7 @@ public class TankController : MonoBehaviour
             {
                 bulletCooldown = _maxBulletCooldown;
                 Instantiate(_bulletPrefab, _bulletSpawn.position, Quaternion.identity);
+                AudioSource.PlayClipAtPoint(_shootSound, transform.position);
             }
             yield return null;
         }

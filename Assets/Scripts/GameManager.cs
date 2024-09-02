@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour
     private InputAction restart;
 
     private int lives = 3;
+    [SerializeField] private AudioSource _music;
+    [SerializeField] private AudioClip _hurtSound;
     [SerializeField] private TMP_Text _livesText;
     [SerializeField] private RectTransform _powerBar;
     [SerializeField] private GameObject _pressEnterText;
@@ -34,6 +36,8 @@ public class GameManager : MonoBehaviour
     private float[] snakePositions = { 3.95f, 1.95f, 0.1f, -1.85f, -3.8f };
     private float[] slimePositions = { 4f, 2.05f, 0.1f, -1.85f, -3.8f };
     [SerializeField] private Collider2D _leftWall;
+    [SerializeField] private AudioClip _foeHitSound;
+    [SerializeField] private AudioClip _foeDeathSound;
 
     private int score;
     [SerializeField] private GameObject _scoreTextPrefab;
@@ -83,6 +87,8 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator GameOver()
     {
+        print(Time.time);
+        _music.mute = true;
         _livesText.gameObject.SetActive(false);
         _powerBar.gameObject.SetActive(false);
         for (int i = 0; i < _enemyParent.childCount; i++)
@@ -90,24 +96,26 @@ public class GameManager : MonoBehaviour
             _enemyParent.GetChild(i).GetComponent<Bullet>().SetDirection(1);
             _enemyParent.GetChild(i).GetComponent<SpriteRenderer>().flipX = true;
         }
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(0.75f);
 
         // Show end text
         _gameEndParent.SetActive(true);
         string[] endText = { "Good work there, for a little while.", "I’m sure you almost had ‘em.",
             "Keep trying, maybe one day you'll win.", "And things had just been getting interesting."};
         _endText.text = endText[UnityEngine.Random.Range(0, 4)];
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(1);
 
         // Show score
         _endGroup1.SetActive(true);
         yield return new WaitForSeconds(0.1f);
         float t = 0;
+        int speedModifier = score < 1000 ? 4 : (score < 50000 ? 2 : 1);
         while (t < 2)
         {
-            int text = (int) Mathf.Lerp(0, score, t);
+            t += Time.deltaTime * speedModifier;
+            int text = (int) Mathf.Lerp(0, score, t / 2);
             _endScoreText.text = text.ToString();
-            t += Time.deltaTime;
+            yield return null;
         }
         yield return new WaitForSeconds(0.5f);
 
@@ -118,9 +126,9 @@ public class GameManager : MonoBehaviour
         if (score > highScore)
         {
             PlayerPrefs.SetInt("hscore", score);
-            yield return new WaitForSeconds(0.25f);
             _newHighScore.SetActive(true);
         }
+        print(Time.time);
     }
 
     private IEnumerator EnemySpawner()
@@ -371,6 +379,7 @@ public class GameManager : MonoBehaviour
     public void LoseLife()
     {
         lives--;
+        AudioSource.PlayClipAtPoint(_hurtSound, tc.transform.position);
         if (lives == 0)
         {
             StartCoroutine(GameOver());
@@ -398,11 +407,13 @@ public class GameManager : MonoBehaviour
         int toGain = 0;
         if (!died)
         {
+            AudioSource.PlayClipAtPoint(_foeHitSound, pos);
             toGain = 100 * (_enemyIntensity >= 12 ? 2 : 1); // 200 points after 60 seconds
         }
 
         if (died)
         {
+            AudioSource.PlayClipAtPoint(_foeDeathSound, pos);
             toGain = 500;
             toGain += 100 * (int)(_enemyIntensity / 2.5f); // extra 100 points per 12.5 seconds, max 500
             if (pos.x > Mathf.Max(7.5f - (_enemyIntensity / 4), 4.5f))

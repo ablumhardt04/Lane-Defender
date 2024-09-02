@@ -126,21 +126,30 @@ public class Foe : MonoBehaviour
                 animator.SetBool("dead", true);
             }
         }
+        if (collision.gameObject.tag == "Tank") // refers to tank
+        {
+            TankCollision();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Tank") // refers to tank and left wall
+        if (collision.gameObject.tag == "Tank") // refers to left wall
         {
-            TankController tc = gm.GetTankController();
-            gm.LoseLife();
-            if (gm.GetLives() < 1)
-            {
-                Instantiate(_bigExplosionPrefab, tc.transform.position, Quaternion.identity);
-                tc.gameObject.SetActive(false);
-            }
-            Instantiate(_bigExplosionPrefab, transform.position, Quaternion.identity);
-            Destroy(gameObject);
+            TankCollision();
         }
+    }
+
+    private void TankCollision()
+    {
+        TankController tc = gm.GetTankController();
+        gm.LoseLife();
+        if (gm.GetLives() < 1)
+        {
+            Instantiate(_bigExplosionPrefab, tc.transform.position, Quaternion.identity);
+            tc.gameObject.SetActive(false);
+        }
+        Instantiate(_bigExplosionPrefab, transform.position, Quaternion.identity);
+        Destroy(gameObject);
     }
 }
