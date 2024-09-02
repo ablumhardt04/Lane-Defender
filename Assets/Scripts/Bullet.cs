@@ -64,6 +64,9 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Halts movement when foe hit
+    /// </summary>
     public void PauseMove(bool state)
     {
         movePaused = state;
@@ -73,6 +76,9 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Increases max speed
+    /// </summary>
     public void MaxSpeedUp(float amount, bool setImmediately)
     {
         _maxSpeed += amount;
@@ -82,6 +88,9 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Used for super animation
+    /// </summary>
     public void PercentageSlowDown(float slow)
     {
         percentSpeed = Mathf.Max(0, slow);

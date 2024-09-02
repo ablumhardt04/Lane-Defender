@@ -49,7 +49,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TMP_Text _endHighScoreText;
     [SerializeField] private GameObject _newHighScore;
 
-    // Start is called before the first frame update
     void Start()
     {
         canvas = GameObject.Find("Canvas");
@@ -71,9 +70,18 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        _powerBar.anchoredPosition = Camera.main.WorldToScreenPoint(_powerBarPosition.position);
+        float scaleFactor = canvas.GetComponent<Canvas>().scaleFactor;
+        Vector2 pos = Camera.main.WorldToScreenPoint(_powerBarPosition.position);
+        _powerBar.anchoredPosition = new Vector2(pos.x / scaleFactor, pos.y / scaleFactor);
+
+        // The enemy intensity value is (seconds since start*) / 5
+        // *excluding time the super attack is taking place in
+        _enemyIntensity = (Time.time - _enemyStartTime - (superTotal * 5)) / 5;
     }
 
+    /// <summary>
+    /// "Press enter" text for super bar
+    /// </summary>
     private IEnumerator EnterTextFlash()
     {
         while (powerSlider.value == 1)
@@ -87,7 +95,6 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator GameOver()
     {
-        print(Time.time);
         _music.mute = true;
         _livesText.gameObject.SetActive(false);
         _powerBar.gameObject.SetActive(false);
@@ -96,7 +103,7 @@ public class GameManager : MonoBehaviour
             _enemyParent.GetChild(i).GetComponent<Bullet>().SetDirection(1);
             _enemyParent.GetChild(i).GetComponent<SpriteRenderer>().flipX = true;
         }
-        yield return new WaitForSeconds(0.75f);
+        yield return new WaitForSeconds(1f);
 
         // Show end text
         _gameEndParent.SetActive(true);
@@ -128,7 +135,6 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.SetInt("hscore", score);
             _newHighScore.SetActive(true);
         }
-        print(Time.time);
     }
 
     private IEnumerator EnemySpawner()
@@ -152,9 +158,6 @@ public class GameManager : MonoBehaviour
                 yield return new WaitForSeconds(1);
             }
 
-            // The enemy intensity value is (seconds since start*) / 5
-            // *excluding time the super attack is taking place in
-            _enemyIntensity = (Time.time - _enemyStartTime - (superTotal * 5)) / 5;
             SpawnEnemy(SelectRandomEnemy(), true);
         }
     }
@@ -225,6 +228,7 @@ public class GameManager : MonoBehaviour
         foe.GetComponent<Bullet>().MaxSpeedUp(EnemySpeedUp(), true);
         foe.GetComponent<Bullet>().SetDirection(lives < 1 ? 1 : -1); // ensures all foes move right after game over
 
+        // Slimes are allowed to spawn two of themselves at once sometimes
         if ((couldDouble) && (health == 1))
         {
             if ((_enemyIntensity <= 4) && (UnityEngine.Random.Range(0, 10) == 0)) // < 20 seconds have passed
@@ -305,9 +309,10 @@ public class GameManager : MonoBehaviour
         _leftWall.isTrigger = false;
         _livesText.gameObject.SetActive(false);
         _powerBar.gameObject.SetActive(false);
+
         while (true)
         {
-            // One second: moving tank and camera into a cinematic position, slowing down enemies
+            // Moving tank and camera into a cinematic position, slowing down enemies
             if (t <= 2)
             {
                 tc.transform.position = Vector2.Lerp(startPos, endPos, t);
@@ -318,7 +323,7 @@ public class GameManager : MonoBehaviour
                     _enemyParent.GetChild(i).GetComponent<Bullet>().PercentageSlowDown(1 - t);
                 }
             }
-            // One second: tank tilts back and starts to vibrate and turns red
+            // Tank tilts back and starts to vibrate and turns red
             if ((t > 1) && (t <= 2))
             {
                 tc.transform.eulerAngles = new Vector3(0, 0, Mathf.Lerp(0, 5, t - 1));
@@ -328,7 +333,7 @@ public class GameManager : MonoBehaviour
                 tc.GetComponent<SpriteRenderer>().color = new Color(1, Mathf.Lerp(1, 2f / 5, t - 1), 
                     Mathf.Lerp(1, 2f / 5, t - 1), 1);
             }
-            // One second: bullet fires, camera moves back to normal
+            // Bullet fires, camera moves back to normal
             if (t > 2)
             {
                 if (!bulletFired)
@@ -342,14 +347,14 @@ public class GameManager : MonoBehaviour
                 Camera.main.transform.position = new Vector2(Mathf.Lerp(-20, 0, (t - 2) * 2), 0);
                 Camera.main.orthographicSize = Mathf.Lerp(1.75f, 5, (t - 2) * 2);
             }
-            // Half second: moves tank back into play
+            // Moves tank back into play
             if (t > 3.5f)
             {
                 tc.GetComponent<SpriteRenderer>().color = Color.white;
                 tc.transform.position = Vector2.Lerp(new Vector2(-10.5f, 0), new Vector2(-7.65f, 0), (t - 3.5f) * 2);
                 tc.transform.eulerAngles = Vector3.zero;
             }
-            // Fixes camera before next frame / before coroutine exits
+            // Fixes camera zpos before next frame / before coroutine exits
             Camera.main.transform.position = new Vector3(Camera.main.transform.position.x,
                 Camera.main.transform.position.y, -10);
             // Resets things before coroutine ends

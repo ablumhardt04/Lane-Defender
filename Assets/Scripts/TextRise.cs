@@ -14,7 +14,6 @@ public class TextRise : MonoBehaviour
     [SerializeField] private bool destroy;
     [SerializeField] private bool fade;
 
-    // Start is called before the first frame update
     void Start()
     {
         rt = GetComponent<RectTransform>();

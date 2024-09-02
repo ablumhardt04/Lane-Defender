@@ -21,7 +21,6 @@ public class Foe : MonoBehaviour
     private bool killedByBigBullet;
     private Color initialColor;
 
-    // Start is called before the first frame update
     void Start()
     {
         gm = GameObject.Find("GameManager").GetComponent<GameManager>();
