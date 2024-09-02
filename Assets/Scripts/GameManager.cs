@@ -75,7 +75,7 @@ public class GameManager : MonoBehaviour
         _powerBar.anchoredPosition = new Vector2(pos.x / scaleFactor, pos.y / scaleFactor);
 
         // The enemy intensity value is (seconds since start*) / 5
-        // *excluding time the super attack is taking place in
+        // *excluding time the super attack is taking place in, five seconds per
         _enemyIntensity = (Time.time - _enemyStartTime - (superTotal * 5)) / 5;
     }
 
