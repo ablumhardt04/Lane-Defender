@@ -89,7 +89,6 @@ public class Foe : MonoBehaviour
     /// </summary>
     private void Death()
     {
-        gm.FoeDied(initialHealth, transform.position.x, killedByBigBullet);
         moveScript.enabled = false;
         Rigidbody2D rb2D = GetComponent<Rigidbody2D>();
         rb2D.bodyType = RigidbodyType2D.Dynamic;
@@ -117,11 +116,13 @@ public class Foe : MonoBehaviour
             }
             if (_health > 1)
             {
+                gm.FoeHit(false, initialHealth, transform.position, false);
                 animator.SetTrigger("hit");
                 _health--;
             }
             else
             {
+                gm.FoeHit(true, initialHealth, transform.position, killedByBigBullet);
                 animator.SetBool("dead", true);
             }
         }

@@ -35,8 +35,11 @@ public class GameManager : MonoBehaviour
     private float[] slimePositions = { 4f, 2.05f, 0.1f, -1.85f, -3.8f };
     [SerializeField] private Collider2D _leftWall;
 
+    private int score;
+    [SerializeField] private GameObject _scoreTextPrefab;
     [SerializeField] private GameObject _gameEndParent;
     [SerializeField] private TMP_Text _endText;
+    [SerializeField] private GameObject _endGroup1;
     [SerializeField] private TMP_Text _endScoreText;
     [SerializeField] private GameObject _endGroup2;
     [SerializeField] private TMP_Text _endHighScoreText;
@@ -59,7 +62,7 @@ public class GameManager : MonoBehaviour
 
     private void Restart_started(InputAction.CallbackContext context)
     {
-        SceneManager.LoadScene(0);
+        Restart();
     }
 
     private void Update()
@@ -87,7 +90,37 @@ public class GameManager : MonoBehaviour
             _enemyParent.GetChild(i).GetComponent<Bullet>().SetDirection(1);
             _enemyParent.GetChild(i).GetComponent<SpriteRenderer>().flipX = true;
         }
-        yield break;
+        yield return new WaitForSeconds(1);
+
+        // Show end text
+        _gameEndParent.SetActive(true);
+        string[] endText = { "Good work there, for a little while.", "I’m sure you almost had ‘em.",
+            "Keep trying, maybe one day you'll win.", "And things had just been getting interesting."};
+        _endText.text = endText[UnityEngine.Random.Range(0, 4)];
+        yield return new WaitForSeconds(0.5f);
+
+        // Show score
+        _endGroup1.SetActive(true);
+        yield return new WaitForSeconds(0.1f);
+        float t = 0;
+        while (t < 2)
+        {
+            int text = (int) Mathf.Lerp(0, score, t);
+            _endScoreText.text = text.ToString();
+            t += Time.deltaTime;
+        }
+        yield return new WaitForSeconds(0.5f);
+
+        // Show high score
+        _endGroup2.SetActive(true);
+        int highScore = PlayerPrefs.GetInt("hscore", 0);
+        _endHighScoreText.text = Mathf.Max(highScore, score).ToString();
+        if (score > highScore)
+        {
+            PlayerPrefs.SetInt("hscore", score);
+            yield return new WaitForSeconds(0.25f);
+            _newHighScore.SetActive(true);
+        }
     }
 
     private IEnumerator EnemySpawner()
@@ -134,6 +167,10 @@ public class GameManager : MonoBehaviour
             length = 1.5f;
         }
         if (_enemyIntensity >= 18) // 90 seconds have passed
+        {
+            length = 1.25f;
+        }
+        if (_enemyIntensity >= 24) // 90 seconds have passed
         {
             length = 1f;
         }
@@ -258,7 +295,8 @@ public class GameManager : MonoBehaviour
         midSuper = true;
         tc.GetComponent<Collider2D>().enabled = false;
         _leftWall.isTrigger = false;
-        canvas.SetActive(false);
+        _livesText.gameObject.SetActive(false);
+        _powerBar.gameObject.SetActive(false);
         while (true)
         {
             // One second: moving tank and camera into a cinematic position, slowing down enemies
@@ -315,7 +353,8 @@ public class GameManager : MonoBehaviour
                 tc.SetSuper(false);
                 superTotal++;
                 powerSlider.value = 0;
-                canvas.SetActive(true);
+                _livesText.gameObject.SetActive(true);
+                _powerBar.gameObject.SetActive(true);
                 _pressEnterText.SetActive(false);
                 yield break;
             }
@@ -354,22 +393,56 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void FoeDied(int foeType, float foeX, bool killedByBigBullet)
+    public void FoeHit(bool died, int foeType, Vector2 pos, bool killedByBigBullet)
     {
-        // Allocates power meter for the kill
-        if ((powerSlider.value != 1) && (!killedByBigBullet))
+        int toGain = 0;
+        if (!died)
         {
-            float superEnergy = foeType * 0.02f; // defaults to 2, 5, or 10% of the bar
-            superEnergy *= 1 + Mathf.Max(0, foeX) / 18; // up to 1.5x multiplier if it's killed quickly
-            superEnergy *= 1 + Mathf.Min(1, _enemyIntensity / 12) / 2; // up to 1.5x time multiplier
-            IncreasePowerSlider(superEnergy);
+            toGain = 100 * (_enemyIntensity >= 12 ? 2 : 1); // 200 points after 60 seconds
         }
-        
+
+        if (died)
+        {
+            toGain = 500;
+            toGain += 100 * (int)(_enemyIntensity / 2.5f); // extra 100 points per 12.5 seconds, max 500
+            if (pos.x > Mathf.Max(7.5f - (_enemyIntensity / 4), 4.5f))
+            {
+                toGain *= 2; // double points if it was killed fast, more wiggle room over time
+            }
+            else if (killedByBigBullet)
+            {
+                toGain *= 2; // double points also available for death by super move
+            }
+
+            // Allocates power meter for the kill
+            if ((powerSlider.value != 1) && (!killedByBigBullet))
+            {
+                float superEnergy = foeType * 0.02f; // defaults to 2, 5, or 10% of the bar
+                superEnergy *= 1 + Mathf.Max(0, pos.x) / 18; // up to 1.5x multiplier if it's killed quickly
+                superEnergy *= 1 + Mathf.Min(1, _enemyIntensity / 12) / 2; // up to 1.5x time multiplier
+                IncreasePowerSlider(superEnergy);
+            }
+        }
+
+        score += toGain;
+        TMP_Text text = Instantiate(_scoreTextPrefab, Camera.main.WorldToScreenPoint(pos), 
+            Quaternion.identity, canvas.transform).GetComponent<TMP_Text>();
+        text.text = "+" + toGain;
     }
 
     public TankController GetTankController()
     {
         return tc;
+    }
+
+    public void Restart()
+    {
+        SceneManager.LoadScene(0);
+    }
+
+    public void Quit()
+    {
+        Application.Quit();
     }
 
     private void OnDestroy()
